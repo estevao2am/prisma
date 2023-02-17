@@ -21,7 +21,7 @@ export type SpanOptions = _SpanOptions & {
  * @returns
  */
 export async function runInChildSpan<R>(options: SpanOptions, cb: (span?: Span, context?: Context) => R | Promise<R>) {
-  if (options.enabled === false || (options.internal && !showAllTraces)) {
+  if (options.internal && !showAllTraces) {
     return cb()
   }
 
