@@ -5,19 +5,34 @@ import { clearDir } from './fs'
 import { pnpmPrismaDbPush } from './pnpm'
 import { Target } from './targets/base'
 
-function getHeader(features: string[]) {
-  const featuresStr = JSON.stringify(['tracing', ...features])
+export type SchemaParams = {
+  numModels: number
+  numRelations: number
+  numEnums: number
+  features: string[]
+  target: Target
+  dataProxy: boolean
+}
+
+function getHeader(features: string[], target: Target, dataProxy: boolean) {
+  const allFeatures: string[] = [...features]
+  if (!dataProxy) {
+    allFeatures.push('tracing')
+  }
+  const featuresStr = JSON.stringify(allFeatures)
+  const binaryTargets = JSON.stringify(target.getBinaryTargets())
   return /* Prisma */ `
 generator client {
   provider = "prisma-client-js"
   output = "./client"
   previewFeatures = ${featuresStr}
-  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+  binaryTargets = ${binaryTargets}
 }
 
 datasource db {
   provider = "postgresql"
-  url = env("TEST_POSTGRES_URI")
+  url = env("DATABASE_URL")
+  ${dataProxy ? 'directUrl = env("DIRECT_URL")' : ''}
 }`
 }
 
@@ -61,7 +76,7 @@ function addRelation(from: Model, to: Model, baseName: string) {
   }
 }
 
-function genSchemaText(numModels: number, numRelations: number, numEnums: number, features: string[]) {
+function genSchemaText({ numEnums, numRelations, numModels, features, target, dataProxy }: SchemaParams) {
   const models = [
     new Model('User')
       .addField('id String @id @default(uuid())')
@@ -97,7 +112,7 @@ enum ${enumName} {
 }`)
   }
 
-  return [getHeader(features)]
+  return [getHeader(features, target, dataProxy)]
     .concat(models.map((m) => m.stringify()))
     .concat(enums)
     .join('\n')
@@ -107,31 +122,11 @@ function randomElement(array) {
   return array[Math.floor(Math.random() * array.length)]
 }
 
-type GenerateSchemaParams = {
-  target: Target
-  workbenchPath: string
-  numModels: number
-  numRelations: number
-  numEnums: number
-  features: string[]
-}
-
-export async function generateClient({
-  target,
-  workbenchPath,
-  numModels,
-  numRelations,
-  numEnums,
-  features,
-}: GenerateSchemaParams) {
+export async function generateClient(workbenchPath: string, params: SchemaParams) {
   await clearDir(path.join(workbenchPath, 'prisma'))
 
-  await fs.writeFile(
-    path.join(workbenchPath, 'prisma', 'schema.prisma'),
-    genSchemaText(numModels, numRelations, numEnums, features),
-    'utf-8',
-  )
+  await fs.writeFile(path.join(workbenchPath, 'prisma', 'schema.prisma'), genSchemaText(params), 'utf-8')
 
-  await pnpmPrismaDbPush(workbenchPath)
-  await target.afterClientGeneration(workbenchPath)
+  await pnpmPrismaDbPush(workbenchPath, params.dataProxy)
+  await params.target.afterClientGeneration(workbenchPath)
 }

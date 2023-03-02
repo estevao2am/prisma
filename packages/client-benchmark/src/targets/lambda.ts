@@ -33,8 +33,9 @@ export class LambdaTarget implements Target {
   private client = new LambdaClient({ region: this.config.aws.region })
 
   getBinaryTargets(): string[] {
-    return ['native', 'rhel-openssl-1.0.x']
+    return ['rhel-openssl-1.0.x']
   }
+
   async afterPnpmInstall(workbenchPath: string): Promise<void> {
     await fs.copyFile(path.join(__dirname, 'measureLambda.js'), path.join(workbenchPath, 'measureLambda.js'))
   }
@@ -73,10 +74,10 @@ export class LambdaTarget implements Target {
       Environment: {
         Variables: {
           PRISMA_SHOW_ALL_TRACES: 'true',
-          TEST_POSTGRES_URI: process.env.TEST_POSTGRES_URI!,
+          DATABASE_URL: process.env.DATABASE_URL!,
         },
       },
-      Timeout: 10,
+      Timeout: 30,
       MemorySize: this.config.aws.memorySize,
     })
 
@@ -102,7 +103,12 @@ export class LambdaTarget implements Target {
 
     const response = await this.client.send(command)
     if (response.FunctionError) {
-      throw new Error('Lambda function error')
+      let msg = ''
+      if (response.Payload) {
+        msg = new TextDecoder('utf8').decode(response.Payload)
+      }
+
+      throw new Error(`Lambda function error: ${msg}`)
     }
 
     if (!response.Payload) {

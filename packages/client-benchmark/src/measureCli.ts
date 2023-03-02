@@ -6,10 +6,9 @@ import { pipeline } from 'stream/promises'
 
 import { clearDir } from './fs'
 import { generateTestPackage, LOCAL_VERSION } from './generateTestPackage'
-import { MeasurementResult, measureMultiple, measureOne } from './measurmentsRunners'
+import { MeasurementResult, measureMultiple, MeasureMultipleParams, measureOne } from './measurmentsRunners'
 import { writeGnuplotFile, XColumn } from './plot'
 import { parseRange, Range } from './range'
-import { Target } from './targets/base'
 import { LambdaTarget } from './targets/lambda'
 import { LocalTarget } from './targets/local'
 
@@ -41,6 +40,7 @@ async function main() {
       }
       return value.split(',')
     },
+    '--data-proxy': Boolean,
   })
 
   const models = parseRange(args['--models'] ?? '10')
@@ -51,20 +51,39 @@ async function main() {
   const baseLineVersion = args['--baseline-version']
   const baseLineFeatures = args['--baseline-features']
   const target = args['--target'] ?? new LocalTarget()
+  const dataProxy = args['--data-proxy'] ?? false
 
   await clearDir(resultsPath)
   if (baseLineVersion || baseLineFeatures) {
     await testVersion({
-      target,
       prismaVersion: baseLineVersion ?? prismaVersion,
-      features: baseLineFeatures ?? features,
       resultCsv: 'baseline.csv',
+
+      measureParams: {
+        models,
+        relations,
+        enums,
+        features: baseLineFeatures ?? features,
+        target,
+        dataProxy,
+        workbenchPath,
+      },
+    })
+  }
+
+  await testVersion({
+    prismaVersion,
+    resultCsv: 'result.csv',
+    measureParams: {
       models,
       relations,
       enums,
-    })
-  }
-  await testVersion({ target, prismaVersion, features, resultCsv: 'result.csv', models, relations, enums })
+      features,
+      target,
+      dataProxy,
+      workbenchPath,
+    },
+  })
 
   if (models.kind === 'range' || relations.kind === 'range' || enums.kind === 'range') {
     const xColumn = getPlotXColumn(models, relations, enums)
@@ -91,40 +110,29 @@ async function main() {
 }
 
 type TestVersionParams = {
-  target: Target
   prismaVersion: string
-  features: string[]
-  models: Range
-  relations: Range
-  enums: Range
   resultCsv: string
+  measureParams: MeasureMultipleParams
 }
 
-async function testVersion({
-  prismaVersion,
-  models,
-  relations,
-  enums,
-  resultCsv,
-  features,
-  target,
-}: TestVersionParams) {
+async function testVersion({ prismaVersion, measureParams, resultCsv }: TestVersionParams) {
+  const { models, enums, relations, target, features } = measureParams
   console.log(`generating test package for ${getTitle(prismaVersion, features)}`)
   await generateTestPackage(target, workbenchPath, prismaVersion)
 
   if (models.kind === 'constant' && relations.kind === 'constant' && enums.kind === 'constant') {
-    const measurement = await measureOne({
+    const measurement = await measureOne(workbenchPath, {
       target,
-      workbenchPath,
       numModels: models.value,
       numRelations: relations.value,
       numEnums: enums.value,
       features,
+      dataProxy: measureParams.dataProxy,
     })
     console.log('Results:')
     console.log(measurement)
   } else {
-    await writeCsv(resultCsv, measureMultiple({ target, workbenchPath, models, relations, enums, features }))
+    await writeCsv(resultCsv, measureMultiple(measureParams))
   }
 }
 
