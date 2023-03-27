@@ -1216,6 +1216,55 @@ describe('RequiredArgumentMissing', () => {
     `)
   })
 
+  test('with null value', () => {
+    expect(
+      renderError(
+        {
+          kind: 'RequiredArgumentMissing',
+          argumentPath: ['where'],
+          selectionPath: [],
+          inputTypes: [
+            {
+              kind: 'object',
+              name: 'UserWhereInput',
+              fields: [
+                { name: 'id', typeNames: ['Int'], required: false },
+                { name: 'email', typeNames: ['String'], required: false },
+              ],
+            },
+          ],
+        },
+        { where: null },
+      ),
+    ).toMatchInlineSnapshot(`
+
+      Colorless:
+
+      {
+      + where: {
+      +   id: Int,
+      +   email: String
+      + }
+      }
+
+      Argument \`where\` must not be null.
+
+      ------------------------------------
+
+      Colored:
+
+      {
+      <brightGreen>+</color> <brightGreen>where</color><brightGreen>: </color><brightGreen>{</color>
+      <brightGreen><dim>+</intensity></color>   <brightGreen><dim>id: Int</intensity></color>,
+      <brightGreen><dim>+</intensity></color>   <brightGreen><dim>email: String</intensity></color>
+      <brightGreen>+</color> <brightGreen>}</color>
+      }
+
+      Argument \`<brightGreen>where</color>\` must not be <brightRed>null</color>.
+
+    `)
+  })
+
   test('field with multiple types', () => {
     expect(
       renderError(
@@ -1913,6 +1962,47 @@ describe('InvalidArgumentValue', () => {
     `)
   })
 
+  test('with no underlying error', () => {
+    expect(
+      renderError(
+        {
+          kind: 'InvalidArgumentValue',
+          selectionPath: [],
+          argumentPath: ['where', 'createdAt'],
+          argument: { name: 'createdAt', typeNames: ['IS0861 DateTime'] },
+          underlyingError: null,
+        },
+        { where: { createdAt: 'now' } },
+      ),
+    ).toMatchInlineSnapshot(`
+
+      Colorless:
+
+      {
+        where: {
+          createdAt: "now"
+                     ~~~~~
+        }
+      }
+
+      Invalid value for argument \`createdAt\`. Expected IS0861 DateTime.
+
+      ------------------------------------
+
+      Colored:
+
+      {
+        where: {
+          createdAt: <brightRed>"now"</color>
+                     <brightRed>~~~~~</color>
+        }
+      }
+
+      Invalid value for argument \`<bold>createdAt</intensity>\`. Expected <brightGreen>IS0861 DateTime</color>.
+
+    `)
+  })
+
   test('nested argument', () => {
     expect(
       renderError(
@@ -2082,6 +2172,71 @@ describe('Union', () => {
               argumentPath: ['where', 'email'],
               argument: { name: 'email', typeNames: ['String'] },
               inferredType: 'Object',
+            },
+          ],
+        },
+        {
+          where: { email: { gt: 123 } },
+        },
+      ),
+    ).toMatchInlineSnapshot(`
+
+      Colorless:
+
+      {
+        where: {
+          email: {
+            gt: 123
+                ~~~
+          }
+        }
+      }
+
+      Argument \`gt\`: Invalid value provided. Expected String, provided Int.
+
+      ------------------------------------
+
+      Colored:
+
+      {
+        where: {
+          email: {
+            gt: <brightRed>123</color>
+                <brightRed>~~~</color>
+          }
+        }
+      }
+
+      Argument \`<bold>gt</intensity>\`: Invalid value provided. Expected <brightGreen>String</color>, provided <brightRed>Int</color>.
+
+    `)
+  })
+
+  test('longest path - nested uinion', () => {
+    expect(
+      renderError(
+        {
+          kind: 'Union',
+          errors: [
+            {
+              kind: 'Union',
+              errors: [
+                {
+                  kind: 'InvalidArgumentType',
+                  selectionPath: [],
+                  argumentPath: ['where', 'email', 'gt'],
+                  argument: { name: 'gt', typeNames: ['String'] },
+                  inferredType: 'Int',
+                },
+
+                {
+                  kind: 'InvalidArgumentType',
+                  selectionPath: [],
+                  argumentPath: ['where', 'email'],
+                  argument: { name: 'email', typeNames: ['String'] },
+                  inferredType: 'Object',
+                },
+              ],
             },
           ],
         },
