@@ -2212,7 +2212,7 @@ describe('Union', () => {
     `)
   })
 
-  test('longest path - nested uinion', () => {
+  test('longest path - nested union', () => {
     expect(
       renderError(
         {
