@@ -1,3 +1,3 @@
-import { runMeasurement } from './base'
+import { runMeasurement } from './base.js'
 
 export { runMeasurement as handler }

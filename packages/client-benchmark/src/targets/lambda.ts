@@ -37,7 +37,7 @@ export class LambdaTarget implements Target {
   }
 
   async afterPnpmInstall(workbenchPath: string): Promise<void> {
-    await fs.copyFile(path.join(__dirname, 'measureLambda.js'), path.join(workbenchPath, 'measureLambda.js'))
+    await fs.copyFile(path.join(__dirname, 'measureLambda.mjs'), path.join(workbenchPath, 'measureLambda.mjs'))
   }
 
   async afterClientGeneration(workbenchPath: string): Promise<void> {
@@ -132,6 +132,7 @@ async function archiveClient(workbenchPath: string, archivePath: string) {
       'prisma/client/runtime/*.js',
       'prisma/client/libquery_engine-rhel-openssl-1.0.x.so.node',
       '*.js',
+      '*.mjs',
     ],
     {
       cwd: workbenchPath,

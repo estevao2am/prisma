@@ -10,13 +10,13 @@ export class LocalTarget implements Target {
   }
 
   async afterPnpmInstall(workbenchPath: string): Promise<void> {
-    await fs.copyFile(path.join(__dirname, 'measureLocal.js'), path.join(workbenchPath, 'measureLocal.js'))
+    await fs.copyFile(path.join(__dirname, 'measureLocal.mjs'), path.join(workbenchPath, 'measureLocal.mjs'))
   }
 
-  async afterClientGeneration(workbenchPath: string) {}
+  async afterClientGeneration() {}
 
   async measure(workbenchPath: string): Promise<Record<string, number>> {
-    const { stdout } = await execa('node', [path.join(workbenchPath, 'measureLocal.js')], {
+    const { stdout } = await execa('node', [path.join(workbenchPath, 'measureLocal.mjs')], {
       env: {
         PRISMA_SHOW_ALL_TRACES: 'true',
       },

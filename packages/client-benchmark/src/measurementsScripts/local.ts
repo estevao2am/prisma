@@ -1,4 +1,4 @@
-import { runMeasurement } from './base'
+import { runMeasurement } from './base.js'
 
 runMeasurement()
   .then((results) => console.log(JSON.stringify(results)))

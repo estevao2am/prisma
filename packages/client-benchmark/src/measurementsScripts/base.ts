@@ -1,6 +1,6 @@
 // this code will be copied into workbench directory, so prisma packages paths are relative to it
 // @ts-ignore Does not exist during build, but will exist during the execution
-import { PrismaInstrumentation } from './node_modules/@prisma/instrumentation'
+import { PrismaInstrumentation } from './node_modules/@prisma/instrumentation/dist/index.js'
 import { BenchmarkSpanExporter, setupOtel } from './otel'
 
 const exporter = new BenchmarkSpanExporter()
@@ -16,12 +16,11 @@ const { PrismaClient } = require('./prisma/client')
 
 requireSpan.end()
 
-export async function runMeasurement() {
-  let prisma
+const prisma = new PrismaClient()
+await prisma.$connect()
 
+export async function runMeasurement() {
   try {
-    prisma = new PrismaClient()
-    await prisma.$connect()
     await prisma.user.findMany({})
   } finally {
     fullSpan.end()

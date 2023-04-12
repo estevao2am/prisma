@@ -20,6 +20,7 @@
     "@types/node": "16.18.11",
     "archiver": "5.3.1",
     "arg": "5.0.2",
+    "aws-crt": "^1.15.14",
     "csv-stringify": "^6.2.4",
     "execa": "5.1.1",
     "fast-glob": "3.2.12"
