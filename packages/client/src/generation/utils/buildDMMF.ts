@@ -47,6 +47,5 @@ exports.Prisma.dmmf = parseDmmf(decompressedDMMF)`
 function buildUncompressedDMMF(dmmf: string) {
   return `
 const dmmfString = ${JSON.stringify(dmmf)}
-const dmmf = JSON.parse(dmmfString)
 exports.Prisma.dmmf = JSON.parse(dmmfString)`
 }

@@ -133,7 +133,7 @@ ${buildDMMF(dataProxy && engineProtocol === 'graphql', this.options.document)}
  */
 const config = ${JSON.stringify(config, null, 2)}
 config.dirname = dirname
-config.document = dmmf
+config.document = exports.Prisma.dmmf
 ${await buildInlineSchema(dataProxy, schemaPath)}
 ${buildInlineDatasource(dataProxy, datasources)}
 ${buildInjectableEdgeEnv(edge, datasources)}
