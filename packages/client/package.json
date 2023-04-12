@@ -100,7 +100,7 @@
     "chalk": "4.1.2",
     "ci-info": "3.8.0",
     "decimal.js": "10.4.3",
-    "esbuild": "0.15.13",
+    "esbuild": "0.17.16",
     "execa": "5.1.1",
     "expect-type": "0.15.0",
     "flat-map-polyfill": "0.3.8",
