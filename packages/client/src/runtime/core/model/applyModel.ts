@@ -128,12 +128,13 @@ function modelActionsLayer(client: Client, dmmfModelName: string): CompositeProx
 }
 
 function getOwnKeys(client: Client, dmmfModelName: string) {
-  const actionKeys = Object.keys(client._baseDmmf.mappingsMap[dmmfModelName]).filter(
-    (key) => key !== 'model' && key !== 'plural',
-  )
-  actionKeys.push('count')
+  // const actionKeys = Object.keys(client._baseDmmf.mappingsMap[dmmfModelName]).filter(
+  //   (key) => key !== 'model' && key !== 'plural',
+  // )
+  // actionKeys.push('count')
 
-  return actionKeys
+  // return actionKeys
+  return ['findMany']
 }
 
 function isValidAggregateName(action: string): action is (typeof aggregateProps)[number] {
