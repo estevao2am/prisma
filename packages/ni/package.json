@@ -39,7 +39,7 @@
     "fzf": "0.5.1",
     "ini": "4.0.0",
     "kleur": "4.1.5",
-    "rimraf": "4.4.1",
+    "rimraf": "5.0.0",
     "terminal-link": "3.0.0",
     "typescript": "4.9.5",
     "unbuild": "1.2.0",
